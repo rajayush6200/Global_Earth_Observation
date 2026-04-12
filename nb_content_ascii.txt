@@ -1,0 +1,764 @@
+Total cells: 15
+
+=== Cell 0 (code) ===
+from dash import Dash, dcc, html, Input, Output
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import base64
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+from bokeh.plotting import figure, show
+from bokeh.models import ColumnDataSource, HoverTool
+import json
+from bokeh.embed import json_item
+import matplotlib.pyplot as plt
+from dash.dependencies import Input, Output
+
+#Sea Level Card
+# Load data from CSV file
+data = pd.read_csv('Global_sea_level_rise.csv')
+
+# Create the bar chart
+import pandas as pd
+import plotly.graph_objs as go
+
+# Load data from CSV file
+data = pd.read_csv('Global_sea_level_rise.csv')
+
+# Create the bar chart
+fig_bar = go.Figure(
+    data=[go.Bar(x=data['Year'], y=data['Sea Level'],)],
+    layout=go.Layout(
+        title=go.layout.Title(text="Bar Chart", font=dict(size=24)),
+        xaxis=go.layout.XAxis(title=go.layout.xaxis.Title(text="Year")),
+        yaxis=go.layout.YAxis(title=go.layout.yaxis.Title(text="Sea Level (mm)")),
+    )
+)
+
+
+area_fig = px.area(data, x='Year', y='Sea Level', title='Area Chart',
+              labels={'Year': 'Year', 'Sea Level': 'Sea Level (mm)'},
+              color_discrete_sequence=['#3D9970'])
+
+# Add a gradient fill
+area_fig.update_traces(mode='lines', fillcolor="aqua")
+
+# Add a line color and shape
+area_fig.update_traces(line_color='darkblue', line_shape='spline', line_smoothing=1.3, line_width=3)
+
+# Adjust the opacity
+area_fig.update_traces(opacity=0.2)
+
+# Customize the layout
+area_fig.update_layout(
+    font_family='Arial',
+    title_font_size=24,
+    title_font_color='#404040',
+    xaxis=dict(
+        title_font_size=24,
+        tickfont_size=14,
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=0.1,
+        tickfont=dict(size=10)
+    ),
+    yaxis=dict(
+        tickmode='linear',
+        dtick=25,
+        zeroline=True,
+        zerolinecolor='lightgray',
+        zerolinewidth=0.1,
+        title_font_size=18,
+        tickfont_size=14,
+        showgrid=False,
+        gridcolor='lightgray',
+        gridwidth=0.01,
+        tickfont=dict(size=10)
+    ),
+    legend=dict(
+        title_font_size=18,
+        font_size=14,
+        bgcolor='rgba(0,0,0,0)',
+        yanchor='bottom',
+        y=0.01,
+        xanchor='left',
+        x=0.01
+    ),
+    plot_bgcolor='white',
+    hoverlabel=dict(
+        font_size=16,
+        font_family='Arial',
+        bgcolor='white',
+        bordercolor='black'
+    ),
+    dragmode='zoom',
+    clickmode='event+select'
+)
+
+
+# Create a box and whiskers plot with Plotly
+fig_box = go.Figure()
+
+fig_box.add_trace(go.Box(
+    y=data['Sea Level'],
+    name='Sea Level',
+    boxmean=True, # set boxmean to True to color the box
+    fillcolor='#d9b3ff', # set fillcolor to change the color of the box
+    marker=dict(
+        color='blue'
+    ),
+    line=dict(
+        color='#00004d'
+    )
+))
+
+# Create a scatter plot with Plotly
+scatter_fig = px.scatter(data, x='Year', y='Sea Level', title='Scatter Plot',
+                 labels={'Year': 'Year', 'Sea Level': 'Sea Level (mm)'}, color_discrete_sequence=['#3D9970'])
+
+# Customize the layout
+scatter_fig.update_layout(
+    font_family='Arial',
+    title_font_size=24,
+    title_font_color='#404040',
+    xaxis=dict(
+        title_font_size=18,
+        tickfont_size=14,
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=0.1,
+        tickfont=dict(size=10)
+    ),
+    yaxis=dict(
+        zeroline=True,
+        zerolinecolor='lightgray',
+        zerolinewidth=0.1,
+        title_font_size=18,
+        tickfont_size=14,
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=0.01,
+        tickfont=dict(size=10)
+    ),
+    legend=dict(
+        title_font_size=18,
+        font_size=14,
+        bgcolor='rgba(0,0,0,0)',
+        yanchor='bottom',
+        y=0.01,
+        xanchor='left',
+        x=0.01
+    ),
+    plot_bgcolor='white',
+    hoverlabel=dict(
+        font_size=16,
+        font_family='Arial',
+       
+[TRUNCATED]
+
+=== Cell 1 (code) ===
+#Correlation
+import pandas as pd
+import plotly.graph_objs as go
+import plotly.express as px
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_bootstrap_components as dbc
+# Load data from a CSV file
+data_temp = pd.read_csv('avg_dataset.csv')
+
+# Extract the relevant columns
+years = data_temp['Year']
+temp = data_temp['Average_Land_Temperature (celsius)']
+temp1 = data_temp['Average_LandOcean_Temperature (celsius)']
+emissions = data_temp['Average_Emissions (MtCO?e)']
+sea=data_temp['Average_Sealevel (mm)']
+
+# Create figure
+fig_corr1 = go.Figure()
+
+# Add trace for temperature
+fig_corr1.add_trace(go.Scatter(x=years, y=temp,
+                         mode='lines+markers',
+                         name='Land Temperature',
+                         line=dict(color='red', width=2),
+                         marker=dict(color='red', size=8)))
+
+# Add trace for emissions
+fig_corr1.add_trace(go.Scatter(x=years, y=emissions,
+                         mode='lines+markers',
+                         name='Carbon Emissions',
+                         line=dict(color='blue', width=2),
+                         marker=dict(color='blue', size=8),
+                         yaxis='y2')) # assign the second y-axis to the emissions trace
+# Add trace for emissions
+fig_corr1.add_trace(go.Scatter(x=years, y=sea,
+                         mode='lines+markers',
+                         name='Sea level',
+                         line=dict(color='green', width=2),
+                         marker=dict(color='green', size=8),
+                         yaxis='y3'))
+
+# Update layout with custom styling
+fig_corr1.update_layout(
+#     plot_bgcolor='#FFFFFF', # set plot area background color
+#     paper_bgcolor='#88B0D7', # remove background
+    font=dict(family='Arial', size=12, color='black'), # set font and color
+    title=dict(text='Correlation between Average Land Temperature, Carbon Emissions and Sea level (1990-2020)', # set title
+               xanchor='center', yanchor='top', x=0.5, y=0.95),
+    xaxis=dict(title='Year', tickmode='linear', tick0=1990, dtick=5), # set x-axis title and tick values
+    yaxis=dict(title='Temperature (?C above pre-industrial levels)', range=[8.6, 10],color='red',title_font=dict(size=16)), # set y-axis title and range for temperature
+    yaxis2=dict(title='Carbon Emissions (metric tons per capita)', range=[22500, 37000], overlaying='y', side='right',color='blue',title_font=dict(size=16)), 
+    yaxis3=dict(title='Sea level(mm)', range=[-25, 69], overlaying='y', side='right',position=.94,color='green',title_font=dict(size=16)), # set y-axis title and range for emissions
+
+    legend=dict(orientation='h', yanchor='bottom', y=-0.2), # move legend to bottom
+)
+
+
+# Create figure
+fig_corr3 = go.Figure()
+
+# Add trace for temperature
+fig_corr3.add_trace(go.Scatter(x=years, y=temp1,
+                         mode='lines+markers',
+                         name='Land and Ocean Temperature',
+                         line=dict(color='red', width=2,shape='spline'),
+                         marker=dict(color='red', size=8)))
+
+# Add trace for emissions
+fig_corr3.add_trace(go.Scatter(x=years, y=emissions,
+                         mode='lines+markers',
+                         name='Carbon Emissions',
+                         line=dict(color='blue', width=2,shape='spline'),
+                         marker=dict(color='blue', size=8),
+                         yaxis='y2')) # assign the second y-axis to the emissions trace
+# Add trace for emissions
+fig_corr3.add_trace(go.Scatter(x=years, y=sea,
+                         mode='lines+markers',
+                         name='Sea level',
+                         line=dict(color='green', width=2,shape='spline'),
+                         marker=dict(color='green', size=8),
+                         yaxis='y3'))
+
+# Update layout with custom styling
+fig_corr3.update_layout(
+#     plot_bgcolor='#FFFFFF', # set plot area background color
+#     paper_bgcolor='#88B0D7', # remove backgro
+[TRUNCATED]
+
+=== Cell 2 (code) ===
+#Carbon Emissions
+
+
+=== Cell 3 (code) ===
+#Temperature card
+import json
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.io as pio
+
+pio.renderers.default = 'browser'
+
+india_states = json.load(open("states_india.geojson", "r"))
+
+us_states=json.load(open("us-states.json", "r"))
+
+can_states=json.load(open("canada.geojson", "r"))
+
+china_states=json.load(open("China_geo.json", "r"))
+
+rus_states=json.load(open("Russia_geo.json", "r"))
+
+brz_states=json.load(open("brazil_geo.json", "r"))
+
+#Temperature Maps-1
+
+state_id_map1 = {}
+state_id_map2 = {}
+state_id_map3 = {}
+state_id_map4 = {}
+state_id_map5 = {}
+state_id_map6 = {}
+
+
+for feature in brz_states["features"]:
+    feature["id"] = feature["id"]
+    state_id_map1[feature["properties"]["name"]] = feature["id"]
+for feature in rus_states["features"]:
+    feature["id"] = feature["properties"]["ID_1"]
+    state_id_map2[feature["properties"]["NAME_1"]] = feature["id"]
+for feature in india_states["features"]:
+    feature["id"] = feature["properties"]["state_code"]
+    state_id_map3[feature["properties"]["st_nm"]] = feature["id"]
+for feature in china_states["features"]:
+    feature["id"] = feature["properties"]["HASC_1"]
+    state_id_map4[feature["properties"]["NAME_1"]] = feature["id"]
+for feature in can_states["features"]:
+    feature["id"] = feature["properties"]["cartodb_id"]
+    state_id_map5[feature["properties"]["name"]] = feature["id"]
+for feature in us_states["features"]:
+    feature["id"] = feature["id"]
+    state_id_map6[feature["properties"]["name"]] = feature["id"]
+
+    
+df1 = pd.read_csv("India_temperatures.csv")
+df1["id"] = df1["State"].apply(lambda x: state_id_map3[x])
+df2 = pd.read_csv("China_temperatures.csv")
+df2["id"] = df2["State"].apply(lambda x: state_id_map4[x])
+df3 = pd.read_csv("Canada_temperatures.csv")
+df3["id"] = df3["State"].apply(lambda x: state_id_map5[x])
+df4 = pd.read_csv("Brazil_temperatures.csv")
+df4["id"] = df4["State"].apply(lambda x: state_id_map1[x])
+df5 = pd.read_csv("Updated_Russia_temperatures.csv")
+df5["id"] = df5["State"].apply(lambda x: state_id_map2[x])
+df6 = pd.read_csv("US_temperatures.csv")
+df6["id"] = df6["State"].apply(lambda x: state_id_map6[x])
+
+
+
+fig11 = px.choropleth_mapbox(
+    df1,
+    locations="id",
+    geojson=india_states,
+    color="AverageTemperature",
+    color_continuous_scale='Turbo',
+    hover_name="State",
+    hover_data=["AverageTemperature"],
+    title="Average Temperature INDIA",
+    mapbox_style="carto-positron",
+    center={"lat": 24, "lon": 78},
+    zoom=3.7,
+    opacity=0.3,
+    width=1400,  # Change width to 800 pixels
+    height=800,
+)
+
+fig21 = px.choropleth_mapbox(
+    df2,
+    locations="id",
+    geojson=china_states,
+    color="AverageTemperature",
+    color_continuous_scale='Turbo',
+    hover_name="State",
+    hover_data=["AverageTemperature"],
+    title="Average Temperature CHINA",
+    mapbox_style="carto-positron",
+    center={"lat": 37, "lon": 104},
+ zoom=3,
+    opacity=0.5,
+    width=1400,  # Change width to 800 pixels
+    height=800,
+)
+
+
+fig31 = px.choropleth_mapbox(
+    df3,
+    locations="id",
+    geojson=can_states,
+    color="AverageTemperature",
+    color_continuous_scale='Turbo',
+    hover_name="State",
+    hover_data=["AverageTemperature"],
+    title="Average Temperature CANADA",
+    mapbox_style="carto-positron",
+    center={"lat": 72, "lon": -99},
+  zoom=1.9,
+    opacity=0.5,
+    width=1400,  # Change width to 800 pixels
+    height=800,
+)
+
+
+fig41 = px.choropleth_mapbox(
+    df4,
+    locations="id",
+    geojson=brz_states,
+    color="AverageTemperature",
+    color_continuous_scale='Turbo',
+    hover_name="State",
+    hover_data=["AverageTemperature"],
+    title="Average Temperature BRAZIL",
+    mapbox_style="carto-positron",
+    center={"lat": -12, "lon": -56},
+    zoom=3,
+    opacity=0.5,
+    width=1400,  # Change width to 800 pixels
+    height=800,
+)
+
+fig51 = px.choropleth_mapbox(
+    df5,
+    locations="id",
+    geojson=rus_states,
+    color="AverageTemperature",
+    color_continuous_scale='Turbo',
+    hove
+[TRUNCATED]
+
+=== Cell 4 (code) ===
+global_temp_country = pd.read_csv('GlobalLandTemperaturesByCountry-2.csv')
+
+import plotly.offline as py
+py.init_notebook_mode(connected=True)
+
+#Let's remove the duplicated countries (in the analysis, we don't consider the presence of 
+#colonies at this the countries) and countries for which no information about the temperature
+
+global_temp_country_clear = global_temp_country[~global_temp_country['Country'].isin(
+    ['Denmark', 'Antarctica', 'France', 'Europe', 'Netherlands',
+     'United Kingdom', 'Africa', 'South America'])]
+
+global_temp_country_clear = global_temp_country_clear.replace(
+   ['Denmark (Europe)', 'France (Europe)', 'Netherlands (Europe)', 'United Kingdom (Europe)'],
+   ['Denmark', 'France', 'Netherlands', 'United Kingdom'])
+
+#Let's average temperature for each country
+
+countries = np.unique(global_temp_country_clear['Country'])
+mean_temp = []
+for country in countries:
+    mean_temp.append(global_temp_country_clear[global_temp_country_clear['Country'] == 
+                                               country]['AverageTemperature'].mean())
+
+
+    
+data_globe = [ dict(
+        type = 'choropleth',
+        locations = countries,
+        z = mean_temp,
+        locationmode = 'country names',
+        text = countries,
+        marker = dict(
+            line = dict(color = 'rgb(0,0,0)', width = 1)),
+            colorbar = dict(autotick = True, tickprefix = '', 
+            title = '# Average\nTemperature,\n?C')
+            )
+       ]
+
+layout = dict(
+    title = 'Average land temperature in countries',
+    geo = dict(
+        showframe = False,
+        showocean = True,
+        oceancolor = 'rgb(0,255,255)',
+        projection = dict(
+        type = 'orthographic',
+            rotation = dict(
+                    lon = 60,
+                    lat = 10),
+        ),
+        lonaxis =  dict(
+                showgrid = False,
+                gridcolor = 'rgb(102, 102, 102)'
+            ),
+        lataxis = dict(
+                showgrid = True,
+                gridcolor = 'rgb(102, 102, 102)'
+                )
+            ),
+        )
+
+fig_globe = dict(data=data_globe , layout=layout)
+
+
+
+fig_CC = pd.read_csv("city_temperature_2.csv")
+
+
+# Define CSS styles
+# styles = {
+#     'column': {
+#         'display': 'inline-block',
+#         'width': '30%',
+#         'padding': '0 0 0',
+#         'boxSizing': 'border-box',
+#         'verticalAlign': 'top'
+#     }
+# }
+
+
+
+
+
+
+
+=== Cell 5 (code) ===
+# CARBON EMISSIONS
+
+#Scatter PLot 
+
+data_carbon_scatter = pd.read_csv('historical_emissions.csv')
+
+#barchart
+
+data_carbon_bar = pd.read_csv('historical_emissions.csv')
+
+# sort the data by CO2 emissions
+data_carbon_bar_sorted = data_carbon_bar.sort_values(by='CO2 Emissions', ascending=False)
+
+top5 = data_carbon_bar.groupby('Country')['CO2 Emissions'].sum().nlargest(5).reset_index()
+top5_df = data_carbon_bar.loc[data_carbon_bar['Country'].isin(top5['Country'])]
+
+bottom5 = data_carbon_bar.groupby('Country')['CO2 Emissions'].sum().nsmallest(5).reset_index()
+bottom5_df = data_carbon_bar.loc[data_carbon_bar['Country'].isin(bottom5['Country'])]
+
+# create the top 5 bar chart using plotly
+fig_top_5 = px.bar(top5_df, x='Country', y='CO2 Emissions', color='Year', barmode='group',
+                   labels={'Country': 'Country', 'CO2 Emissions': 'Carbon Emissions (MTCO2e)', 'Year': 'Year'},
+                   title='Bar Chart - Top five Countries in Carbon Emissions')
+
+# increase the height of the figure
+fig_top_5.update_layout(height=400)
+
+# create the bottom 5 bar chart using plotly
+fig_bottom_5 = px.bar(bottom5_df, x='Country', y='CO2 Emissions', color='Year', barmode='group',
+                      labels={'Country': 'Country', 'CO2 Emissions': 'Carbon Emissions (MTCO2e)', 'Year': 'Year'},
+                      title='Bar Chart - Bottom five Countries in Carbon Emissions')
+
+# increase the height of the figure
+fig_bottom_5.update_layout(height=400)
+
+
+
+
+
+#Line chart
+data_carbon_line = pd.read_csv('historical_emissions.csv')
+
+# filter the dataset to include only top 5 and bottom 5 countries based on CO2 emissions
+top_5_countries = data_carbon_line.groupby('Country')['CO2 Emissions'].sum().nlargest(5).index
+bottom_5_countries = data_carbon_line.groupby('Country')['CO2 Emissions'].sum().nsmallest(5).index
+filtered_data_carbon_line = data_carbon_line[data_carbon_line['Country'].isin(top_5_countries) | data_carbon_line['Country'].isin(bottom_5_countries)]
+
+# create the line chart for top 5 countries using plotly express
+top_5_fig = px.line(filtered_data_carbon_line[filtered_data_carbon_line['Country'].isin(top_5_countries)], x="Year", y="CO2 Emissions", color="Country",
+              title="Line Chart - Top five Countries in Carbon Emissions")
+
+# customize the layout of the top 5 line chart
+top_5_fig.update_layout(
+    xaxis_title="Year",
+    yaxis_title="C02 Emissions (MTCO2e)",
+    font=dict(
+        family="Courier New, monospace",
+        size=18,
+        color="#7f7f7f"
+    ))
+
+top_5_fig.update_layout(height = 400)
+
+# create the line chart for bottom 5 countries using plotly express
+bottom_5_fig = px.line(filtered_data_carbon_line[filtered_data_carbon_line['Country'].isin(bottom_5_countries)], x="Year", y="CO2 Emissions", color="Country",
+              title="Line Chart - Bottom five Countries in Carbon Emissions")
+
+# customize the layout of the bottom 5 line chart
+bottom_5_fig.update_layout(
+    xaxis_title="Year",
+    yaxis_title="C02 Emissions (MTCO2e)",
+    font=dict(
+        family="Courier New, monospace",
+        size=18,
+        color="#7f7f7f"
+    )
+)
+bottom_5_fig.update_layout(height = 400)
+
+
+#HEAT MAP
+data_heat_carbon = pd.read_csv('sorted_data_with_lat_lon.csv')
+
+# Create heatmap using latitude and longitude values
+fig_heat_carbon = px.density_mapbox(data_heat_carbon, 
+                        lat='latitude', 
+                        lon='longitude', 
+                        z='CO2 Emissions',
+                        hover_data=['Country', 'CO2 Emissions', 'Year'],
+                         radius=20,
+                         zoom=1,
+                        mapbox_style="carto-positron",
+                        animation_frame='Year',
+                        opacity=0.9,
+                        title='Heatmap of Average Temperature by Country',
+                        color_continuous_scale=px.colors.sequential.Viridis,)
+fig_heat_carbon.update_layout(
+    updatemenus=[dict(
+        type='buttons',
+      
+        buttons=list([
+
+[TRUNCATED]
+
+=== Cell 6 (code) ===
+app = Dash(__name__,external_stylesheets =external_stylesheets)
+styles = {
+    'dropdown': {
+        'width': '420px',
+       ' padding-left':'20px',
+        'display': 'inline-block',
+        'font-size': '15px','border-color': '#2A547E','border-width': '2px',
+        
+    },
+    'container': {
+        'display': 'flex',
+        'width': '420px',
+        ' margin-left':'20px',
+    }
+}
+app.layout = html.Div([
+    html.Div(
+        [   # Earth's image in the first line
+    html.Img(src=f"data:image/jpg;base64,{encoded_image}", style={"height": "300px", "display": "block", "margin": "auto"}, ),
+            
+            html.H1("EARTH'S CLIMATE ANALYTICS", style={"text-align": "center","font-family":"PT Sans Narrow",'font-size': '45px' }),
+            # Track changes in Earth's temperature, carbon emissions & Sea Levels over time in the third line
+            html.H4("Track changes in Earth's temperature, Carbon Emissions & Sea Levels over time", style={"text-align": "center","font-family":"PT Sans Narrow",'font-size': '20px'}),
+        ],
+        style={"padding-top": "10px", 'padding-bottom': '10px',"background-color": "black", "color": "white", 'box-shadow': '5px 5px 5px grey',"border-radius": "15px",}
+    ),
+    dcc.Dropdown(
+            id="demo-dropdown",
+            options=[
+                {"label": "Temperature", "value": "temperature"},
+                {"label": "Carbon Emissions", "value": "carbon"},
+                {"label": "Sea Levels", "value": "sea"},
+                {"label": "Correlation", "value": "correlation"}
+            ],
+            value="",
+            placeholder="Select the Desired Visulization",
+        style={'width':'450px',"margin-top": "20px", 'margin-bottom': '20px','padding-left': '20px','font-size': '15px','border-color': '#2A547E','border-width': '2px' }
+        ),
+    html.Div(id='dd-output-container'),
+    
+],        style={"background-color": "#CDDEEE", "padding": "10px"}
+
+)
+
+
+@app.callback(
+    Output('dd-output-container', 'children'),
+    Input('demo-dropdown', 'value')
+)
+def update_output(value):
+    if value == 'temperature':
+        return html.Div(
+            children=[
+                
+
+                html.Div(
+                    children=[
+                        html.H1(children='Temperature Change Visualization (Celsius)',
+                                style={'font-size': '36px', 'color': 'white'}),
+                        html.P(children='This dashboard visualizes global Average Temperature level rise data ',
+                               style={'font-size': '20px', 'color': 'white', 'margin-top': '0px'})
+                    ],
+                    style={'text-align': 'center', 'padding-top': '50px', "display": 'block', "font-family": "PT Sans Narrow"}
+                ),
+                html.Div(children=[ 
+                    html.H1(      
+                        children='Monthly Average Temperature (1995-2020)',      
+                          style={            'font-family': 'Helvetica',   
+                                              'text-align': 'center',   
+                                              'margin-top': '20px',         
+                                              'font-weight': 'bold'        }    ), 
+                html.Div([
+                    html.Div([
+                        html.Label('Select a Country'),   
+                        dcc.Dropdown(id='country-dropdown',
+                             options=[{'label': country, 'value': country} for country in sorted(fig_CC['Country'].unique())],
+                                value=fig_CC['Country'].iloc[0],
+                                style=styles['dropdown']
+                            ),
+                        ], style=styles['dropdown']),
+                        html.Div([
+                            html.Label('Select a City'), 
+                            dcc.Dropdown(id='city-dropdown',      
+                                options=[{'label': city, 'value': city} for city in sort
+[TRUNCATED]
+
+=== Cell 7 (code) ===
+
+
+=== Cell 8 (code) ===
+
+
+=== Cell 9 (code) ===
+# import pandas as pd
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+
+
+
+=== Cell 10 (code) ===
+# import pandas as pd
+# import seaborn as sns
+
+# data = pd.read_csv('avg_dataset.csv')
+# sns.pairplot(data)
+
+
+=== Cell 11 (code) ===
+
+
+=== Cell 12 (code) ===
+import pandas as pd
+import plotly.express as px
+
+# Load data from CSV file
+data_emissions = pd.read_csv('avg_dataset.csv')
+
+# Create a stacked bar chart with Plotly
+fig_emissions = px.bar(data_emissions, x='Year', y=['Average_Emissions (MtCO?e)', 'Average_Land_Temperature (celsius)', 'Average_LandOcean_Temperature (celsius)'],
+                      title='Greenhouse Gas Emissions vs Temperature')
+
+# Customize the layout
+fig_emissions.update_layout(
+    font_family='Arial',
+    title_font_size=24,
+    title_font_color='#404040',
+    xaxis=dict(
+        title='Year',
+        title_font_size=18,
+        tickfont_size=14,
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=0.1
+    ),
+    yaxis=dict(
+        title='Value',
+        title_font_size=18,
+        tickfont_size=14,
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=0.1
+    ),
+    legend=dict(
+        title='Variable',
+        title_font_size=18,
+        font_size=10,
+        bgcolor='rgba(0,0,0,0)',
+        yanchor='top',
+        y=0.001,
+        xanchor='right',
+        x=1
+    ),
+    barmode='stack',
+    plot_bgcolor='white',
+    hoverlabel=dict(
+        font_size=16,
+        font_family='Arial',
+        bgcolor='white',
+        bordercolor='black'
+    )
+)
+
+# Show the chart
+fig_emissions.show()
+
+
+=== Cell 13 (code) ===
+
+
+=== Cell 14 (code) ===

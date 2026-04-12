@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!--
+  tableau_workbook.twb
+  ====================
+  Pre-configured Tableau Workbook for the Earth's Climate Analytics project.
+  
+  This workbook connects to 5 CSV data sources exported by tableau_export.py:
+    1. Global Temperatures (yearly, with early warning indicators)
+    2. Carbon Emissions (country-level with regions and rankings)
+    3. Sea Level Rise (with trend lines)
+    4. Correlation Matrix (combined temp + CO₂ + sea level)
+    5. Country Temperatures (country-level yearly averages)
+  
+  INSTRUCTIONS:
+    1. Run 'python tableau_export.py' first to generate the CSVs.
+    2. Open this .twb file in Tableau Desktop or Tableau Public.
+    3. If prompted, navigate to the 'tableau_data/' folder to re-link data sources.
+    4. Build dashboards using the pre-configured data connections.
+  
+  NOTE: You may need to re-point the file paths to your local 'tableau_data/' folder
+  when opening in Tableau for the first time.
+-->
+<workbook source-build='2024.1.0' source-platform='win' version='18.1'
+  xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <_.fcp.ObjectModelEncapsulateLegacy.true...ObjectModelEncapsulateLegacy />
+  </document-format-change-manifest>
+  
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- DATA SOURCES                                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <datasources>
+    
+    <!-- 1. Global Temperatures -->
+    <datasource caption='Global Temperatures' inline='true' name='global_temperatures' version='18.1'>
+      <connection class='textscan' directory='tableau_data' filename='tableau_global_temperatures.csv' password='' server=''>
+        <relation name='tableau_global_temperatures.csv' table='[tableau_global_temperatures#csv]' type='table'>
+          <columns gridOrigin='A1:Q1:no:A1:Q276:0' header='yes' outcome='2'>
+            <column datatype='integer' name='Year' ordinal='0' />
+            <column datatype='real' name='LandAverageTemperature' ordinal='1' />
+            <column datatype='real' name='LandAverageTemperatureUncertainty' ordinal='2' />
+            <column datatype='real' name='LandAndOceanAverageTemperature' ordinal='3' />
+            <column datatype='string' name='source' ordinal='4' />
+            <column datatype='real' name='Moving_Avg_5yr' ordinal='5' />
+            <column datatype='real' name='First_Diff_DeltaT' ordinal='6' />
+            <column datatype='real' name='Second_Diff_Accel' ordinal='7' />
+            <column datatype='real' name='Rolling_Variance_10yr' ordinal='8' />
+            <column datatype='boolean' name='Accel_Warning' ordinal='9' />
+            <column datatype='real' name='Accel_Warning_Threshold' ordinal='10' />
+            <column datatype='boolean' name='High_Variance_Flag' ordinal='11' />
+            <column datatype='integer' name='Decade' ordinal='12' />
+            <column datatype='string' name='Decade_Label' ordinal='13' />
+            <column datatype='real' name='Temp_Anomaly' ordinal='14' />
+          </columns>
+        </relation>
+      </connection>
+      <aliases enabled='yes' />
+    </datasource>
+    
+    <!-- 2. Carbon Emissions -->
+    <datasource caption='Carbon Emissions' inline='true' name='carbon_emissions' version='18.1'>
+      <connection class='textscan' directory='tableau_data' filename='tableau_carbon_emissions.csv' password='' server=''>
+        <relation name='tableau_carbon_emissions.csv' table='[tableau_carbon_emissions#csv]' type='table'>
+          <columns gridOrigin='A1:L1:no:A1:L1000:0' header='yes' outcome='2'>
+            <column datatype='string' name='Country' ordinal='0' />
+            <column datatype='integer' name='Year' ordinal='1' />
+            <column datatype='real' name='CO2_Emissions_MtCO2e' ordinal='2' />
+            <column datatype='string' name='Region' ordinal='3' />
+            <column datatype='real' name='Cumulative_CO2' ordinal='4' />
+            <column datatype='integer' name='Yearly_Rank' ordinal='5' />
+            <column datatype='real' name='YoY_Change' ordinal='6' />
+            <column datatype='real' name='YoY_Change_Pct' ordinal='7' />
+            <column datatype='real' name='Global_Share_Pct' ordinal='8' />
+            <column datatype='integer' name='Decade' ordinal='9' />
+          </columns>
+        </relation>
+      </connection>
+      <aliases enabled='yes' />
+    </datasource>
+    
+    <!-- 3. Sea Level Rise -->
+    <datasource caption='Sea Level Rise' inline='true' name='sea_level' version='18.1'>
+      <connection class='textscan' directory='tableau_data' filename='tableau_sea_level.csv' password='' server=''>
+        <relation name='tableau_sea_level.csv' table='[tableau_sea_level#csv]' type='table'>
+          <columns gridOrigin='A1:K1:no:A1:K150:0' header='yes' outcome='2'>
+            <column datatype='integer' name='Year' ordinal='0' />
+            <column datatype='string' name='date' ordinal='1' />
+            <column datatype='real' name='Sea Level' ordinal='2' />
+            <column datatype='string' name='source' ordinal='3' />
+            <column datatype='real' name='Linear_Trend' ordinal='4' />
+            <column datatype='real' name='Trend_Rate_mm_per_yr' ordinal='5' />
+            <column datatype='real' name='YoY_Change_mm' ordinal='6' />
+            <column datatype='real' name='Moving_Avg_10yr' ordinal='7' />
+            <column datatype='integer' name='Decade' ordinal='8' />
+            <column datatype='real' name='Sea_Level_Relative' ordinal='9' />
+          </columns>
+        </relation>
+      </connection>
+      <aliases enabled='yes' />
+    </datasource>
+    
+    <!-- 4. Correlation Matrix -->
+    <datasource caption='Correlation Matrix' inline='true' name='correlation' version='18.1'>
+      <connection class='textscan' directory='tableau_data' filename='tableau_correlation_matrix.csv' password='' server=''>
+        <relation name='tableau_correlation_matrix.csv' table='[tableau_correlation_matrix#csv]' type='table'>
+          <columns gridOrigin='A1:L1:no:A1:L40:0' header='yes' outcome='2'>
+            <column datatype='integer' name='Year' ordinal='0' />
+            <column datatype='real' name='Avg_Land_Temperature_C' ordinal='1' />
+            <column datatype='real' name='Avg_LandOcean_Temperature_C' ordinal='2' />
+            <column datatype='real' name='Avg_Emissions_MtCO2e' ordinal='3' />
+            <column datatype='real' name='Avg_Sea_Level_mm' ordinal='4' />
+            <column datatype='string' name='source' ordinal='5' />
+            <column datatype='real' name='Avg_Land_Temperature_C_Normalized' ordinal='6' />
+            <column datatype='real' name='Avg_LandOcean_Temperature_C_Normalized' ordinal='7' />
+            <column datatype='real' name='Avg_Emissions_MtCO2e_Normalized' ordinal='8' />
+            <column datatype='real' name='Avg_Sea_Level_mm_Normalized' ordinal='9' />
+            <column datatype='integer' name='Decade' ordinal='10' />
+          </columns>
+        </relation>
+      </connection>
+      <aliases enabled='yes' />
+    </datasource>
+    
+    <!-- 5. Country Temperatures -->
+    <datasource caption='Country Temperatures' inline='true' name='country_temps' version='18.1'>
+      <connection class='textscan' directory='tableau_data' filename='tableau_country_temperatures.csv' password='' server=''>
+        <relation name='tableau_country_temperatures.csv' table='[tableau_country_temperatures#csv]' type='table'>
+          <columns gridOrigin='A1:I1:no:A1:I50000:0' header='yes' outcome='2'>
+            <column datatype='string' name='Country' ordinal='0' />
+            <column datatype='integer' name='Year' ordinal='1' />
+            <column datatype='real' name='Avg_Temperature' ordinal='2' />
+            <column datatype='real' name='Avg_Uncertainty' ordinal='3' />
+            <column datatype='string' name='Continent' ordinal='4' />
+            <column datatype='string' name='alpha-2' ordinal='5' />
+            <column datatype='string' name='alpha-3' ordinal='6' />
+            <column datatype='integer' name='Decade' ordinal='7' />
+            <column datatype='real' name='Temp_Anomaly' ordinal='8' />
+          </columns>
+        </relation>
+      </connection>
+      <aliases enabled='yes' />
+    </datasource>
+    
+  </datasources>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- WORKSHEETS (Starter templates)                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <worksheets>
+    
+    <worksheet name='Temperature Timeline'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Global Temperatures' name='global_temperatures' />
+          </datasources>
+          <datasource-dependencies datasource='global_temperatures'>
+            <column datatype='integer' name='[Year]' role='dimension' type='quantitative' />
+            <column datatype='real' name='[LandAverageTemperature]' role='measure' type='quantitative' />
+            <column datatype='real' name='[Moving_Avg_5yr]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+        </view>
+      </table>
+    </worksheet>
+    
+    <worksheet name='Emissions by Country'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Carbon Emissions' name='carbon_emissions' />
+          </datasources>
+          <datasource-dependencies datasource='carbon_emissions'>
+            <column datatype='string' name='[Country]' role='dimension' type='nominal' />
+            <column datatype='integer' name='[Year]' role='dimension' type='quantitative' />
+            <column datatype='real' name='[CO2_Emissions_MtCO2e]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Region]' role='dimension' type='nominal' />
+          </datasource-dependencies>
+        </view>
+      </table>
+    </worksheet>
+    
+    <worksheet name='Sea Level Trend'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sea Level Rise' name='sea_level' />
+          </datasources>
+          <datasource-dependencies datasource='sea_level'>
+            <column datatype='integer' name='[Year]' role='dimension' type='quantitative' />
+            <column datatype='real' name='[Sea Level]' role='measure' type='quantitative' />
+            <column datatype='real' name='[Linear_Trend]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+        </view>
+      </table>
+    </worksheet>
+    
+    <worksheet name='Climate Correlation'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Correlation Matrix' name='correlation' />
+          </datasources>
+          <datasource-dependencies datasource='correlation'>
+            <column datatype='integer' name='[Year]' role='dimension' type='quantitative' />
+            <column datatype='real' name='[Avg_Land_Temperature_C_Normalized]' role='measure' type='quantitative' />
+            <column datatype='real' name='[Avg_Emissions_MtCO2e_Normalized]' role='measure' type='quantitative' />
+            <column datatype='real' name='[Avg_Sea_Level_mm_Normalized]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+        </view>
+      </table>
+    </worksheet>
+    
+    <worksheet name='Country Temperature Map'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Country Temperatures' name='country_temps' />
+          </datasources>
+          <datasource-dependencies datasource='country_temps'>
+            <column datatype='string' name='[Country]' role='dimension' type='nominal' />
+            <column datatype='integer' name='[Year]' role='dimension' type='quantitative' />
+            <column datatype='real' name='[Avg_Temperature]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Continent]' role='dimension' type='nominal' />
+            <column datatype='real' name='[Temp_Anomaly]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+        </view>
+      </table>
+    </worksheet>
+    
+  </worksheets>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- DASHBOARD STARTERS                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <dashboards>
+    <dashboard name='Climate Overview Dashboard'>
+      <size maxheight='900' maxwidth='1400' minheight='700' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000'>
+          <zone h='10000' id='2' name='Temperature Timeline' type-v2='worksheet' w='50000' x='0' y='0' />
+          <zone h='10000' id='3' name='Emissions by Country' type-v2='worksheet' w='50000' x='50000' y='0' />
+          <zone h='10000' id='4' name='Sea Level Trend' type-v2='worksheet' w='50000' x='0' y='50000' />
+          <zone h='10000' id='5' name='Climate Correlation' type-v2='worksheet' w='50000' x='50000' y='50000' />
+        </zone>
+      </zones>
+    </dashboard>
+  </dashboards>
+  
+</workbook>
