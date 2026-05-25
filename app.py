@@ -361,7 +361,7 @@ try:
     c2 = pd.read_csv(dp(_city2_file))
     c2["Date"] = pd.to_datetime(c2["dt"], errors="coerce")
     c2["year"] = c2["Date"].dt.year
-    by_year2 = c2.groupby(["year","City","Country","Latitude","Longitude"]).mean().reset_index()
+    by_year2 = c2.groupby(["year","City","Country","Latitude","Longitude"]).mean(numeric_only=True).reset_index()
     cont_map = pd.read_csv(dp("continents2.csv.xls"))
     cont_map["Country"] = cont_map["name"]
     cont_map = cont_map[["Country","region","alpha-2","alpha-3"]]
@@ -534,7 +534,7 @@ try:
     # Bar-race frames
     race = data_carbon_scatter[data_carbon_scatter["Year"].between(1990, 2018)]
     df_total = race.groupby(["Country","Year"])["CO2 Emissions"].sum().reset_index()
-    top10 = df_total.groupby("Year").apply(lambda x: x.nlargest(10,"CO2 Emissions")).reset_index(drop=True)
+    top10 = df_total.sort_values("CO2 Emissions", ascending=False).groupby("Year").head(10).reset_index(drop=True)
     top10["Rank"]  = top10.groupby("Year")["CO2 Emissions"].rank(ascending=False)
     top10["Color"] = pd.factorize(top10["Country"])[0]
 

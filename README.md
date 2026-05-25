@@ -1,11 +1,11 @@
 <div align="center">
 
-<img src="Dataset/earth_image1.png" alt="Earth's Climate Analytics Banner" width="100%"/>
+<img src="Dataset/earth_image1.png" alt="EarthVision AI Banner" width="100%"/>
 
-# 🌍 Global Earth Observation
-### *Earth's Climate Analytics — Visualization & Early Warning System*
+# 🌍 earthvision-ai
+### *EarthVision AI — Visualization & Early Warning System*
 
-**An enterprise-grade, interactive analytics platform tracking 275 years of planetary climate signals — Surface Temperature · Carbon Emissions · Sea Level Rise**
+**An enterprise-grade, AI-ready interactive analytics platform tracking 275 years of planetary climate signals — Surface Temperature · Carbon Emissions · Sea Level Rise**
 
 ---
 
@@ -59,7 +59,7 @@
 
 ## 🎯 Project Overview
 
-**Global Earth Observation** is a production-grade climate intelligence platform built to analyze, visualize, and forecast the three defining pillars of modern climate science: **surface temperature**, **carbon dioxide emissions**, and **sea level rise** — spanning 275 years of Earth's observational record.
+**EarthVision AI** is a production-grade climate intelligence platform built to analyze, visualize, and forecast the three defining pillars of modern climate science: **surface temperature**, **carbon dioxide emissions**, and **sea level rise** — spanning 275 years of Earth's observational record.
 
 The platform addresses a critical gap in public climate tooling: the need for a **unified, interactive, analytically rich dashboard** that bridges raw scientific datasets with actionable intelligence, anomaly detection, and enterprise-grade BI reporting through Tableau.
 
@@ -389,7 +389,7 @@ flowchart LR
 ## 📁 Repository Structure
 
 ```
-Global_Earth_Observation/
+earthvision-ai/
 │
 ├── 🧠 Core Application
 │   ├── app.py                          # Main Plotly Dash app (958 lines, 6 modules)
@@ -764,8 +764,8 @@ Dataset/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AyushRaj/Global_Earth_Observation.git
-cd Global_Earth_Observation
+git clone https://github.com/rajayush6200/earthvision-ai.git
+cd earthvision-ai
 ```
 
 ### 2. Create a Virtual Environment
