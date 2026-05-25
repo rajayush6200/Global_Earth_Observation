@@ -532,7 +532,7 @@ Step 6 ── VISUALIZE
 Step 7 ── DASHBOARD (Tableau)
          Open tableau_workbook.twb in Tableau Desktop / Public
          Data sources pre-linked to tableau_data/*.csv
-         Publish to Tableau Public → paste embed URL into app.py
+         Publish to Tableau Public → paste embed URL into tableau_section.py (TABLEAU_EMBEDS)
 
 Step 8 ── EXPORT STATIC
          python early_warning.py (as __main__)
