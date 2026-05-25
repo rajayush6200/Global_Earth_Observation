@@ -3,10 +3,148 @@ Professional Tableau integration UI for the Dash app: embedded Public views,
 capability mapping, export catalog, and workbook workflow.
 """
 import os
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from dash import dcc, html
+
+# Curated Tableau Public embeds (workbook/view). Climate gallery viz may fail when
+# Tableau retires legacy extracts; a local Plotly panel is always shown as primary.
+TABLEAU_EMBEDS = {
+    "co2": {
+        "workbook": "CountriesCO2emissionspercapita_16421584351800",
+        "view": "Dashboard1",
+        "title": "CO₂ — Tableau Public",
+    },
+    "climate_gallery": {
+        "workbook": "ClimateChange-BigQuestions",
+        "view": "Allhistory",
+        "title": "Climate Q&A — Tableau Public (gallery)",
+    },
+    "climate_alt": {
+        "workbook": "GettingStartedGuide",
+        "view": "GlobalCO2Emissionspercapita",
+        "title": "Global CO₂ per capita — Tableau Public",
+    },
+    "superstore": {
+        "workbook": "Superstore_24",
+        "view": "Overview",
+        "title": "Superstore — UX reference",
+    },
+}
+
+
+def _tableau_embed_url(workbook: str, view: str) -> str:
+    """Build a Tableau Public iframe URL with documented embed parameters."""
+    params = (
+        ":showVizHome=no"
+        "&:embed=yes"
+        "&:toolbar=yes"
+        "&:tabs=no"
+        "&:embed_code_version=3"
+        "&:host_url=https://public.tableau.com/"
+        "&:origin=viz_share_link"
+    )
+    return f"https://public.tableau.com/views/{workbook}/{view}?{params}"
+
+
+def _build_climate_qa_plotly(base_dir: str) -> Tuple[Optional[go.Figure], Optional[go.Figure]]:
+    """Story-style climate Q&A from project correlation extract (always available offline)."""
+    path = os.path.join(base_dir, "tableau_data", "tableau_correlation_matrix.csv")
+    if not os.path.exists(path):
+        return None, None
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        return None, None
+    if df.empty or "Year" not in df.columns:
+        return None, None
+
+    years = df["Year"]
+    fig_main = make_subplots(specs=[[{"secondary_y": True}]])
+
+    if "Avg_Land_Temperature_C" in df.columns:
+        fig_main.add_trace(
+            go.Scatter(
+                x=years,
+                y=df["Avg_Land_Temperature_C"],
+                name="Land temp (°C)",
+                line=dict(color="#ff6b6b", width=2),
+                mode="lines+markers",
+            ),
+            secondary_y=False,
+        )
+    if "Avg_Emissions_MtCO2e" in df.columns:
+        fig_main.add_trace(
+            go.Scatter(
+                x=years,
+                y=df["Avg_Emissions_MtCO2e"],
+                name="CO₂ emissions (MtCO2e)",
+                line=dict(color="#74b9ff", width=2),
+                mode="lines+markers",
+            ),
+            secondary_y=True,
+        )
+    if "Avg_Sea_Level_mm" in df.columns:
+        fig_main.add_trace(
+            go.Scatter(
+                x=years,
+                y=df["Avg_Sea_Level_mm"],
+                name="Sea level (mm)",
+                line=dict(color="#55efc4", width=2),
+                mode="lines+markers",
+            ),
+            secondary_y=True,
+        )
+
+    fig_main.update_layout(
+        title="Climate Q&A — How do temperature, emissions, and sea level relate?",
+        template="plotly_dark",
+        paper_bgcolor="#0d1117",
+        plot_bgcolor="#131c26",
+        height=420,
+        legend=dict(orientation="h", y=-0.15),
+        margin=dict(l=50, r=50, t=50, b=60),
+        font=dict(color="#dfe6e9"),
+    )
+    fig_main.update_xaxes(title_text="Year")
+    fig_main.update_yaxes(title_text="Land temperature (°C)", secondary_y=False)
+    fig_main.update_yaxes(title_text="Emissions / sea level", secondary_y=True)
+
+    fig_norm = go.Figure()
+    norm_cols = [c for c in df.columns if c.endswith("_Normalized")]
+    labels = {
+        "Avg_Land_Temperature_C_Normalized": "Land temp",
+        "Avg_LandOcean_Temperature_C_Normalized": "Land+ocean temp",
+        "Avg_Emissions_MtCO2e_Normalized": "Emissions",
+        "Avg_Sea_Level_mm_Normalized": "Sea level",
+    }
+    palette = ["#ff6b6b", "#fd79a8", "#74b9ff", "#55efc4"]
+    for i, col in enumerate(norm_cols[:4]):
+        fig_norm.add_trace(
+            go.Scatter(
+                x=years,
+                y=df[col],
+                name=labels.get(col, col),
+                line=dict(color=palette[i % len(palette)], width=2),
+                mode="lines",
+            )
+        )
+    fig_norm.update_layout(
+        title="Normalized signals (0–1) — compare trends on one scale",
+        template="plotly_dark",
+        paper_bgcolor="#0d1117",
+        plot_bgcolor="#131c26",
+        height=320,
+        legend=dict(orientation="h", y=-0.2),
+        margin=dict(l=50, r=30, t=50, b=60),
+        font=dict(color="#dfe6e9"),
+        xaxis_title="Year",
+        yaxis_title="Normalized value",
+    )
+    return fig_main, fig_norm
 
 
 def _read_summary(base_dir: str) -> Optional[pd.DataFrame]:
@@ -68,10 +206,21 @@ def build_tableau_section(base_dir: str) -> html.Div:
     orange = "#E97627"
     muted = "#8b9aab"
 
-    q = ":showVizHome=no&:embed=y&:toolbar=yes&:origin=viz_share_link"
-    embed_co2 = f"https://public.tableau.com/views/CountriesCO2emissionspercapita_16421584351800/Dashboard1?{q}"
-    embed_super = f"https://public.tableau.com/views/Superstore_24/Overview?{q}"
-    embed_climate = f"https://public.tableau.com/views/ClimateChange-BigQuestions/Allhistory?{q}"
+    embed_co2 = _tableau_embed_url(
+        TABLEAU_EMBEDS["co2"]["workbook"], TABLEAU_EMBEDS["co2"]["view"]
+    )
+    embed_super = _tableau_embed_url(
+        TABLEAU_EMBEDS["superstore"]["workbook"], TABLEAU_EMBEDS["superstore"]["view"]
+    )
+    embed_climate = _tableau_embed_url(
+        TABLEAU_EMBEDS["climate_gallery"]["workbook"],
+        TABLEAU_EMBEDS["climate_gallery"]["view"],
+    )
+    embed_climate_alt = _tableau_embed_url(
+        TABLEAU_EMBEDS["climate_alt"]["workbook"],
+        TABLEAU_EMBEDS["climate_alt"]["view"],
+    )
+    climate_main_fig, climate_norm_fig = _build_climate_qa_plotly(base_dir)
 
     tdir = os.path.join(base_dir, "tableau_data")
     ready = os.path.exists(tdir) and any(f.endswith(".csv") for f in os.listdir(tdir))
@@ -201,15 +350,133 @@ def build_tableau_section(base_dir: str) -> html.Div:
             },
         )
 
-    def embed_card(title, subtitle, src, note, accent):
+    def embed_card(title, subtitle, src, note, accent, extra_children=None):
+        open_link = html.A(
+            "Open in Tableau Public ↗",
+            href=src.split("?")[0],
+            target="_blank",
+            rel="noopener noreferrer",
+            style={
+                "color": accent,
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "textDecoration": "none",
+                "marginBottom": "10px",
+                "display": "inline-block",
+            },
+        )
+        children: List = [
+            html.H3(title, style={"color": accent, "marginBottom": "6px", "fontSize": "18px"}),
+            html.P(subtitle, style={"color": muted, "fontSize": "13px", "marginBottom": "8px"}),
+            open_link,
+        ]
+        if extra_children:
+            children.extend(extra_children)
+        children.extend(
+            [
+                html.Iframe(
+                    src=src,
+                    style=frame,
+                    title=title,
+                    allow="fullscreen",
+                    referrerPolicy="no-referrer-when-downgrade",
+                ),
+                html.P(
+                    note,
+                    style={
+                        "color": "#5c6b7a",
+                        "fontSize": "11px",
+                        "marginTop": "10px",
+                        "fontStyle": "italic",
+                    },
+                ),
+            ]
+        )
+        return html.Div(children, style=card)
+
+    def climate_qa_card():
+        accent = "#55efc4"
+        plotly_block = []
+        if climate_main_fig is not None:
+            plotly_block.append(
+                dcc.Graph(
+                    figure=climate_main_fig,
+                    config={"displayModeBar": True, "scrollZoom": True},
+                    style={"marginBottom": "12px"},
+                )
+            )
+        if climate_norm_fig is not None:
+            plotly_block.append(
+                dcc.Graph(
+                    figure=climate_norm_fig,
+                    config={"displayModeBar": True},
+                    style={"marginBottom": "16px"},
+                )
+            )
+        if not plotly_block:
+            plotly_block.append(
+                html.P(
+                    "Run python tableau_export.py to generate correlation data for this panel.",
+                    style={"color": muted, "fontSize": "13px"},
+                )
+            )
+
+        gallery_iframes = [
+            html.P(
+                "Optional Tableau Public gallery references (network required). "
+                "If a frame is blank or shows a datasource error, the gallery workbook "
+                "may use retired extracts — use the Plotly charts above or open the link in a new tab.",
+                style={"color": muted, "fontSize": "12px", "marginBottom": "10px"},
+            ),
+            html.Iframe(
+                src=embed_climate_alt,
+                style={**frame, "height": "480px"},
+                title=TABLEAU_EMBEDS["climate_alt"]["title"],
+                allow="fullscreen",
+            ),
+            html.P(
+                "Alternate gallery: ClimateChange-BigQuestions (legacy; may fail on extract refresh).",
+                style={"color": "#5c6b7a", "fontSize": "11px", "margin": "8px 0"},
+            ),
+            html.Iframe(
+                src=embed_climate,
+                style={**frame, "height": "480px"},
+                title=TABLEAU_EMBEDS["climate_gallery"]["title"],
+                allow="fullscreen",
+            ),
+        ]
+
         return html.Div(
             [
-                html.H3(title, style={"color": accent, "marginBottom": "6px", "fontSize": "18px"}),
-                html.P(subtitle, style={"color": muted, "fontSize": "13px", "marginBottom": "12px"}),
-                html.Iframe(src=src, style=frame, title=title),
-                html.P(note, style={"color": "#5c6b7a", "fontSize": "11px", "marginTop": "10px", "fontStyle": "italic"}),
+                html.H3(
+                    "Climate Q&A",
+                    style={"color": accent, "marginBottom": "6px", "fontSize": "18px"},
+                ),
+                html.P(
+                    "Primary analytics from your tableau_correlation_matrix.csv export — "
+                    "always available without Tableau Public. Gallery iframes below are optional.",
+                    style={"color": muted, "fontSize": "13px", "marginBottom": "12px"},
+                ),
+                html.Div(plotly_block),
+                html.Details(
+                    [
+                        html.Summary(
+                            "Tableau Public gallery embeds (optional)",
+                            style={"color": accent, "cursor": "pointer", "fontWeight": "600", "marginBottom": "10px"},
+                        ),
+                        html.Div(gallery_iframes),
+                        html.A(
+                            "Open ClimateChange-BigQuestions on Tableau Public ↗",
+                            href=embed_climate.split("?")[0],
+                            target="_blank",
+                            rel="noopener noreferrer",
+                            style={"color": accent, "fontSize": "12px"},
+                        ),
+                    ],
+                    open=False,
+                ),
             ],
-            style=card,
+            style={**card, "gridColumn": "1 / -1"},
         )
 
     caps = html.Div(
@@ -262,21 +529,15 @@ def build_tableau_section(base_dir: str) -> html.Div:
                 "to mirror these patterns on your climate data.",
                 style={"color": muted, "fontSize": "14px", "marginBottom": "18px", "lineHeight": "1.5"},
             ),
+            climate_qa_card(),
             html.Div(
                 [
                     embed_card(
                         "CO₂ — Tableau Public",
                         "National and per-capita emissions — template for maps, BANs, and bar races.",
                         embed_co2,
-                        "Gallery viz; requires network. If blocked, open the same URL on tableau.com.",
+                        "Gallery viz; requires network. If blocked, use Open in Tableau Public.",
                         "#74b9ff",
-                    ),
-                    embed_card(
-                        "Climate Q&A — Tableau Public",
-                        "Story-style climate overview — cross-check narratives against our correlation extract.",
-                        embed_climate,
-                        "Some networks block embedded Public; use Open in new tab if the frame is empty.",
-                        "#55efc4",
                     ),
                 ],
                 style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(480px, 1fr))", "gap": "16px"},
