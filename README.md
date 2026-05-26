@@ -146,7 +146,9 @@ The system processes over **120 MB of raw observational data** across country-le
 ### 📊 Tableau BI Integration
 - **5 Enriched Export CSVs** — Auto-generated with rankings, cumulative totals, anomalies, decade labels
 - **Pre-configured Workbook** — `tableau_workbook.twb` with all data sources pre-linked
-- **Embedded Analytics** — Live Tableau Public iframes within the Dash app
+- **Embedded Analytics** — Live Tableau Public iframes (Embedding API v3–compatible URLs) in the Dash app
+- **Climate Q&A Panel** — Plotly charts from `tableau_correlation_matrix.csv` (works offline) plus optional Public gallery embeds
+- **Three Sub-tabs** — Embedded analytics · Features & catalog · Workbook workflow (high-contrast tab navigation)
 - **Capability Mapping** — Parameters, LOD expressions, table calculations, sets, and geospatial guidance
 - **Export Catalog** — Interactive dataset guide with field previews and row counts
 
@@ -392,9 +394,9 @@ flowchart LR
 earthvision-ai/
 │
 ├── 🧠 Core Application
-│   ├── app.py                          # Main Plotly Dash app (958 lines, 6 modules)
+│   ├── app.py                          # Main Plotly Dash app (6 modules, Tableau embed CSS)
 │   ├── early_warning.py                # Statistical EWS — 5 Plotly figures + panel builder
-│   ├── tableau_section.py              # Tableau UI — embedded analytics, catalog, workflow
+│   ├── tableau_section.py              # Tableau UI — tabs, embeds, Climate Q&A, TABLEAU_EMBEDS
 │   └── requirements.txt               # Pinned Python dependencies
 │
 ├── 🔧 Data Engineering Scripts
@@ -589,12 +591,37 @@ outputs/
 The Tableau integration is a **complete BI pipeline** that bridges Python analytics with enterprise-grade visual intelligence:
 
 ```
-Python Pipeline          Tableau Layer           Embedded Layer
-──────────────           ─────────────           ──────────────
+Python Pipeline          Tableau Layer           Embedded Layer (Dash)
+──────────────           ─────────────           ─────────────────────
 tableau_export.py   →   tableau_data/*.csv   →   tableau_workbook.twb
                     →   Tableau Desktop/Public →  Publish to Tableau Public
-                    →   Embed URL             →   Iframe in Dash app
+                    →   TABLEAU_EMBEDS dict   →   tableau_section.py (iframes + Plotly Climate Q&A)
 ```
+
+### Dash Tableau module (`tableau_section.py`)
+
+Navigate to **📊 Tableau Dashboards** in the main dropdown. The module has three sub-tabs:
+
+| Sub-tab | Contents |
+|---------|----------|
+| **Embedded analytics** | CO₂ and Superstore Tableau Public iframes; **Climate Q&A** (Plotly + optional gallery) |
+| **Features & catalog** | Tableau capability cards + `tableau_summary.csv` field catalog |
+| **Workbook workflow** | Export → open `.twb` → publish & embed steps |
+
+**Climate Q&A** uses your exported correlation data for primary charts (always available). Optional **Tableau Public gallery embeds** use maintained gallery workbooks configured in `TABLEAU_EMBEDS` — do not embed retired vizzes that rely on legacy `.tde` extracts (e.g. old `ClimateChange-BigQuestions` gallery workbooks), which show datasource errors on Tableau Public.
+
+### Configuring embed URLs
+
+Edit the `TABLEAU_EMBEDS` dictionary at the top of `tableau_section.py`:
+
+| Key | Default workbook / view | Role |
+|-----|-------------------------|------|
+| `co2` | `CountriesCO2emissionspercapita_…` / `Dashboard1` | Main CO₂ embed card |
+| `climate_gallery_1` | `GettingStartedGuide` / `GlobalCO2Emissionspercapita` | Gallery embed #1 |
+| `climate_gallery_2` | `CountriesCO2emissionspercapita_…` / `Dashboard1` | Gallery embed #2 |
+| `superstore` | `Superstore_24` / `Overview` | UX reference embed |
+
+After publishing your own workbook from `tableau_workbook.twb`, add or replace entries with your **Share → Copy Link** workbook and sheet names.
 
 ### Exported Dataset Catalog
 
@@ -627,10 +654,10 @@ python tableau_export.py
 #    File: tableau_workbook.twb → Tableau Desktop / Public
 
 # 3. Publish to Tableau Public
-#    Copy embed URL → paste into tableau_section.py config
+#    Copy embed URL → update TABLEAU_EMBEDS in tableau_section.py
 
 # 4. Embedded views appear live in the Dash app
-#    Navigate to: 📊 Tableau Dashboards → Embedded analytics
+#    Navigate to: 📊 Tableau Dashboards → Embedded analytics (or Climate Q&A gallery)
 ```
 
 ---
@@ -678,7 +705,7 @@ Dataset/
 | 🌊 Sea Level | Bar, Area, Box, Scatter, Line | 141 years of tidal and satellite measurements |
 | 🔗 Correlation | Triple-axis, Scatter, Stacked Bar | Joint climate signal analysis |
 | 🚨 Early Warning | 5-panel statistical dashboard | Anomaly detection and acceleration flagging |
-| 📊 Tableau | Embedded iframes, catalog, workflow guide | Enterprise BI integration |
+| 📊 Tableau | 3 sub-tabs, Climate Q&A Plotly + Public gallery, catalog, workflow | Enterprise BI integration |
 
 </div>
 
@@ -907,6 +934,9 @@ Python's default Windows encoding (cp1252) caused silent failures when reading C
 
 ### 7. Tableau Workbook Portability
 `.twb` files with absolute data source paths break across machines. **Solution:** All paths configured relative to `tableau_data/` folder; export pipeline uses `utf-8-sig` encoding for Excel compatibility.
+
+### 8. Tableau Public Legacy Extract Failures
+Some third-party gallery workbooks on Tableau Public still reference deprecated `.tde` extracts and fail with datasource errors when embedded. **Solution:** Curated `TABLEAU_EMBEDS` registry in `tableau_section.py` uses maintained workbooks only; Climate Q&A primary charts are served from local Plotly + `tableau_correlation_matrix.csv` so analytics work without Tableau Public.
 
 ---
 

@@ -10,44 +10,357 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from dash import dcc, html
 
-# Curated Tableau Public embeds (workbook/view). Climate gallery viz may fail when
-# Tableau retires legacy extracts; a local Plotly panel is always shown as primary.
+# Curated Tableau Public embeds (workbook/view).
+# Do NOT use ClimateChange-BigQuestions — Tableau Public retired its legacy .tde extracts
+# (datasource / "Unable to proceed" errors). Use maintained gallery workbooks only.
 TABLEAU_EMBEDS = {
     "co2": {
         "workbook": "CountriesCO2emissionspercapita_16421584351800",
         "view": "Dashboard1",
         "title": "CO₂ — Tableau Public",
+        "subtitle": "National and per-capita emissions — maps, BANs, and bar races.",
     },
-    "climate_gallery": {
-        "workbook": "ClimateChange-BigQuestions",
-        "view": "Allhistory",
-        "title": "Climate Q&A — Tableau Public (gallery)",
-    },
-    "climate_alt": {
+    "climate_gallery_1": {
         "workbook": "GettingStartedGuide",
         "view": "GlobalCO2Emissionspercapita",
-        "title": "Global CO₂ per capita — Tableau Public",
+        "title": "Global CO₂ per capita",
+        "subtitle": "Gapminder-style emissions explorer (Tableau Public gallery).",
+    },
+    "climate_gallery_2": {
+        "workbook": "CountriesCO2emissionspercapita_16421584351800",
+        "view": "Dashboard1",
+        "title": "Country CO₂ emissions dashboard",
+        "subtitle": "Interactive country-level emissions (maintained Public workbook).",
     },
     "superstore": {
         "workbook": "Superstore_24",
         "view": "Overview",
         "title": "Superstore — UX reference",
+        "subtitle": "Quick filters, cross-highlighting, and dashboard chrome.",
     },
 }
 
+TABLEAU_EMBED_SCRIPT = (
+    "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"
+)
+
+# Enterprise tab bar tokens (inactive tabs must contrast with #0f1419 / #131c26 page bg)
+TABLEAU_TAB = {
+    "orange": "#E97627",
+    "inactive_bg": "#2d4258",
+    "inactive_border": "#5a7a9a",
+    "inactive_text": "#e8eef4",
+    "hover_bg": "#3a5572",
+    "active_bg": "#0f1419",
+    "bar_bg": "#1a2634",
+    "bar_border": "#3d5168",
+}
+
+
+def _tableau_subtab_styles(accent: str) -> Tuple[dict, dict, dict, dict, dict]:
+    """Inactive, selected, tabs container, content panel, and colors dict for dcc.Tabs."""
+    inactive = {
+        "padding": "14px 22px",
+        "marginRight": "6px",
+        "marginBottom": "0",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "letterSpacing": "0.03em",
+        "fontFamily": "Inter, PT Sans Narrow, sans-serif",
+        "color": TABLEAU_TAB["inactive_text"],
+        "backgroundColor": TABLEAU_TAB["inactive_bg"],
+        "border": f"1px solid {TABLEAU_TAB['inactive_border']}",
+        "borderBottom": f"2px solid {TABLEAU_TAB['inactive_border']}",
+        "borderRadius": "8px 8px 0 0",
+        "cursor": "pointer",
+        "whiteSpace": "nowrap",
+        "transition": "background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease",
+    }
+    selected = {
+        **inactive,
+        "color": "#ffffff",
+        "backgroundColor": TABLEAU_TAB["active_bg"],
+        "borderTop": f"3px solid {accent}",
+        "borderLeft": f"1px solid {accent}",
+        "borderRight": f"1px solid {accent}",
+        "borderBottom": f"2px solid {TABLEAU_TAB['active_bg']}",
+        "fontWeight": "700",
+        "boxShadow": f"0 -4px 18px rgba(233, 118, 39, 0.28)",
+    }
+    tabs_container = {
+        "marginTop": "4px",
+        "padding": "12px 12px 0 12px",
+        "background": f"linear-gradient(180deg, {TABLEAU_TAB['bar_bg']} 0%, #131c26 100%)",
+        "border": f"1px solid {TABLEAU_TAB['bar_border']}",
+        "borderBottom": "none",
+        "borderRadius": "10px 10px 0 0",
+        "display": "flex",
+        "flexWrap": "wrap",
+        "alignItems": "flex-end",
+        "gap": "4px",
+    }
+    content_panel = {
+        "backgroundColor": TABLEAU_TAB["active_bg"],
+        "padding": "20px 16px 24px",
+        "border": f"1px solid {TABLEAU_TAB['bar_border']}",
+        "borderTop": f"2px solid {accent}",
+        "borderRadius": "0 0 10px 10px",
+        "minHeight": "120px",
+    }
+    colors = {
+        "border": TABLEAU_TAB["inactive_border"],
+        "primary": accent,
+        "background": TABLEAU_TAB["inactive_bg"],
+    }
+    return inactive, selected, tabs_container, content_panel, colors
+
+
+def _build_tableau_subtabs(
+    tab_embed,
+    tab_features,
+    tab_workflow,
+    accent: str,
+    muted: str,
+) -> html.Div:
+    """Tab navigation shell with visible inactive states and enterprise styling."""
+    inactive, selected, tabs_container, content_panel, colors = _tableau_subtab_styles(accent)
+
+    def _tab(label: str, value: str, panel) -> dcc.Tab:
+        return dcc.Tab(
+            label=label,
+            value=value,
+            children=html.Div(panel, className="tableau-tab-panel", style={"paddingTop": "4px"}),
+            style=inactive,
+            selected_style=selected,
+            className="tableau-subtab",
+            selected_className="tableau-subtab tableau-subtab--selected",
+        )
+
+    tabs = dcc.Tabs(
+        id="tableau-subtabs",
+        value="tab-embed",
+        persistence=True,
+        persistence_type="session",
+        children=[
+            _tab("📊  Embedded analytics", "tab-embed", tab_embed),
+            _tab("📋  Features & catalog", "tab-feat", tab_features),
+            _tab("🔧  Workbook workflow", "tab-flow", tab_workflow),
+        ],
+        colors=colors,
+        style=tabs_container,
+        content_style=content_panel,
+        parent_style={"backgroundColor": "transparent"},
+        className="tableau-subtabs-root",
+        parent_className="tableau-subtabs-parent",
+        content_className="tableau-subtabs-content",
+    )
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Span(
+                                "SECTIONS",
+                                style={
+                                    "fontSize": "10px",
+                                    "fontWeight": "800",
+                                    "letterSpacing": "0.14em",
+                                    "color": accent,
+                                    "marginRight": "12px",
+                                },
+                            ),
+                            html.Span(
+                                "Select a view — all tabs below are clickable",
+                                style={
+                                    "fontSize": "13px",
+                                    "color": muted,
+                                    "fontWeight": "500",
+                                },
+                            ),
+                        ],
+                        style={"display": "flex", "flexWrap": "wrap", "alignItems": "center", "gap": "8px"},
+                    ),
+                    html.Div(
+                        [
+                            html.Span("●", style={"color": accent, "fontSize": "10px", "marginRight": "6px"}),
+                            html.Span("Active", style={"color": "#dfe6e9", "fontSize": "11px", "marginRight": "14px"}),
+                            html.Span("○", style={"color": TABLEAU_TAB["inactive_border"], "fontSize": "10px", "marginRight": "6px"}),
+                            html.Span("Available", style={"color": muted, "fontSize": "11px"}),
+                        ],
+                        style={"display": "flex", "alignItems": "center", "marginTop": "8px"},
+                    ),
+                ],
+                className="tableau-tab-nav-header",
+                style={
+                    "marginBottom": "10px",
+                    "padding": "12px 14px",
+                    "backgroundColor": "#131c26",
+                    "borderRadius": "8px",
+                    "border": f"1px solid {TABLEAU_TAB['bar_border']}",
+                    "borderLeft": f"4px solid {accent}",
+                },
+            ),
+            tabs,
+        ],
+        className="tableau-nav-shell",
+    )
+
 
 def _tableau_embed_url(workbook: str, view: str) -> str:
-    """Build a Tableau Public iframe URL with documented embed parameters."""
+    """Build a Tableau Public iframe URL (Embedding API v3–compatible query params)."""
     params = (
         ":showVizHome=no"
         "&:embed=yes"
         "&:toolbar=yes"
         "&:tabs=no"
+        "&:device=desktop"
+        "&:language=en-US"
         "&:embed_code_version=3"
         "&:host_url=https://public.tableau.com/"
         "&:origin=viz_share_link"
     )
     return f"https://public.tableau.com/views/{workbook}/{view}?{params}"
+
+
+def _tableau_view_url(workbook: str, view: str) -> str:
+    """Public view URL (no embed params) for Open in new tab links."""
+    return f"https://public.tableau.com/views/{workbook}/{view}"
+
+
+def _responsive_tableau_iframe(
+    workbook: str,
+    view: str,
+    title: str,
+    height_vh: float = 62.0,
+    min_height_px: int = 480,
+) -> html.Div:
+    """Responsive iframe wrapper with loading hint (works on localhost and deployed Dash)."""
+    src = _tableau_embed_url(workbook, view)
+    min_h = f"min({height_vh}vh, 720px)"
+    wrap_style = {
+        "position": "relative",
+        "width": "100%",
+        "minHeight": f"{min_height_px}px",
+        "height": min_h,
+        "backgroundColor": "#0d1117",
+        "borderRadius": "6px",
+        "overflow": "hidden",
+        "border": "1px solid #2c3e50",
+    }
+    iframe_style = {
+        "position": "absolute",
+        "top": 0,
+        "left": 0,
+        "width": "100%",
+        "height": "100%",
+        "border": "none",
+        "backgroundColor": "#0d1117",
+    }
+    return html.Div(
+        [
+            html.Div(
+                f"Loading {title}…",
+                className="tableau-embed-loading",
+                style={
+                    "position": "absolute",
+                    "inset": 0,
+                    "display": "flex",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "color": "#8b9aab",
+                    "fontSize": "13px",
+                    "pointerEvents": "none",
+                    "zIndex": 0,
+                },
+            ),
+            html.Iframe(
+                src=src,
+                style=iframe_style,
+                title=title,
+                allow="fullscreen",
+                referrerPolicy="no-referrer-when-downgrade",
+            ),
+        ],
+        style=wrap_style,
+        className="tableau-embed-wrap",
+    )
+
+
+def _gallery_tableau_iframe(workbook: str, view: str, title: str) -> html.Div:
+    """
+    Gallery-only embed frame: full width of parent, 16:9 aspect ratio, capped height.
+    Does not use tableau-embed-wrap (avoids global vh/min-height rules on other embeds).
+    """
+    src = _tableau_embed_url(workbook, view)
+    return html.Div(
+        [
+            html.Div(
+                f"Loading {title}…",
+                className="tableau-gallery-embed-loading",
+                style={
+                    "position": "absolute",
+                    "inset": 0,
+                    "display": "flex",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "color": "#8b9aab",
+                    "fontSize": "13px",
+                    "pointerEvents": "none",
+                    "zIndex": 0,
+                },
+            ),
+            html.Iframe(
+                src=src,
+                style={
+                    "position": "absolute",
+                    "top": 0,
+                    "left": 0,
+                    "width": "100%",
+                    "height": "100%",
+                    "border": "none",
+                    "backgroundColor": "#0d1117",
+                },
+                title=title,
+                allow="fullscreen",
+                referrerPolicy="no-referrer-when-downgrade",
+            ),
+        ],
+        className="tableau-gallery-embed-frame",
+    )
+
+
+def _gallery_embed_block(key: str, accent: str, muted: str) -> html.Div:
+    """Single gallery embed with title, open link, and full-width aspect-ratio iframe."""
+    cfg = TABLEAU_EMBEDS[key]
+    wb, view = cfg["workbook"], cfg["view"]
+    title = cfg["title"]
+    return html.Div(
+        [
+            html.H4(title, style={"color": accent, "margin": "0 0 6px", "fontSize": "15px"}),
+            html.P(
+                cfg.get("subtitle", ""),
+                style={"color": muted, "fontSize": "12px", "marginBottom": "8px"},
+            ),
+            html.A(
+                "Open in Tableau Public ↗",
+                href=_tableau_view_url(wb, view),
+                target="_blank",
+                rel="noopener noreferrer",
+                style={
+                    "color": accent,
+                    "fontSize": "12px",
+                    "fontWeight": "600",
+                    "textDecoration": "none",
+                    "display": "inline-block",
+                    "marginBottom": "10px",
+                },
+            ),
+            _gallery_tableau_iframe(wb, view, title),
+        ],
+        className="tableau-gallery-embed-item",
+    )
 
 
 def _build_climate_qa_plotly(base_dir: str) -> Tuple[Optional[go.Figure], Optional[go.Figure]]:
@@ -212,14 +525,6 @@ def build_tableau_section(base_dir: str) -> html.Div:
     embed_super = _tableau_embed_url(
         TABLEAU_EMBEDS["superstore"]["workbook"], TABLEAU_EMBEDS["superstore"]["view"]
     )
-    embed_climate = _tableau_embed_url(
-        TABLEAU_EMBEDS["climate_gallery"]["workbook"],
-        TABLEAU_EMBEDS["climate_gallery"]["view"],
-    )
-    embed_climate_alt = _tableau_embed_url(
-        TABLEAU_EMBEDS["climate_alt"]["workbook"],
-        TABLEAU_EMBEDS["climate_alt"]["view"],
-    )
     climate_main_fig, climate_norm_fig = _build_climate_qa_plotly(base_dir)
 
     tdir = os.path.join(base_dir, "tableau_data")
@@ -350,47 +655,50 @@ def build_tableau_section(base_dir: str) -> html.Div:
             },
         )
 
-    def embed_card(title, subtitle, src, note, accent, extra_children=None):
-        open_link = html.A(
-            "Open in Tableau Public ↗",
-            href=src.split("?")[0],
-            target="_blank",
-            rel="noopener noreferrer",
-            style={
-                "color": accent,
-                "fontSize": "12px",
-                "fontWeight": "600",
-                "textDecoration": "none",
-                "marginBottom": "10px",
-                "display": "inline-block",
-            },
-        )
+    def embed_card(title, subtitle, src, note, accent, workbook=None, view=None, extra_children=None):
+        open_href = _tableau_view_url(workbook, view) if workbook and view else src.split("?")[0]
         children: List = [
             html.H3(title, style={"color": accent, "marginBottom": "6px", "fontSize": "18px"}),
             html.P(subtitle, style={"color": muted, "fontSize": "13px", "marginBottom": "8px"}),
-            open_link,
+            html.A(
+                "Open in Tableau Public ↗",
+                href=open_href,
+                target="_blank",
+                rel="noopener noreferrer",
+                style={
+                    "color": accent,
+                    "fontSize": "12px",
+                    "fontWeight": "600",
+                    "textDecoration": "none",
+                    "marginBottom": "10px",
+                    "display": "inline-block",
+                },
+            ),
         ]
         if extra_children:
             children.extend(extra_children)
-        children.extend(
-            [
+        if workbook and view:
+            children.append(_responsive_tableau_iframe(workbook, view, title))
+        else:
+            children.append(
                 html.Iframe(
                     src=src,
                     style=frame,
                     title=title,
                     allow="fullscreen",
                     referrerPolicy="no-referrer-when-downgrade",
-                ),
-                html.P(
-                    note,
-                    style={
-                        "color": "#5c6b7a",
-                        "fontSize": "11px",
-                        "marginTop": "10px",
-                        "fontStyle": "italic",
-                    },
-                ),
-            ]
+                )
+            )
+        children.append(
+            html.P(
+                note,
+                style={
+                    "color": "#5c6b7a",
+                    "fontSize": "11px",
+                    "marginTop": "10px",
+                    "fontStyle": "italic",
+                },
+            )
         )
         return html.Div(children, style=card)
 
@@ -421,30 +729,24 @@ def build_tableau_section(base_dir: str) -> html.Div:
                 )
             )
 
-        gallery_iframes = [
-            html.P(
-                "Optional Tableau Public gallery references (network required). "
-                "If a frame is blank or shows a datasource error, the gallery workbook "
-                "may use retired extracts — use the Plotly charts above or open the link in a new tab.",
-                style={"color": muted, "fontSize": "12px", "marginBottom": "10px"},
-            ),
-            html.Iframe(
-                src=embed_climate_alt,
-                style={**frame, "height": "480px"},
-                title=TABLEAU_EMBEDS["climate_alt"]["title"],
-                allow="fullscreen",
-            ),
-            html.P(
-                "Alternate gallery: ClimateChange-BigQuestions (legacy; may fail on extract refresh).",
-                style={"color": "#5c6b7a", "fontSize": "11px", "margin": "8px 0"},
-            ),
-            html.Iframe(
-                src=embed_climate,
-                style={**frame, "height": "480px"},
-                title=TABLEAU_EMBEDS["climate_gallery"]["title"],
-                allow="fullscreen",
-            ),
-        ]
+        gallery_body = html.Div(
+            [
+                html.P(
+                    "Curated Tableau Public workbooks with live data connections (no legacy .tde extracts). "
+                    "Requires internet; use Open in Tableau Public if your network blocks iframes.",
+                    style={
+                        "color": muted,
+                        "fontSize": "12px",
+                        "marginBottom": "20px",
+                        "lineHeight": "1.5",
+                        "maxWidth": "100%",
+                    },
+                ),
+                _gallery_embed_block("climate_gallery_1", accent, muted),
+                _gallery_embed_block("climate_gallery_2", "#74b9ff", muted),
+            ],
+            className="tableau-gallery-embeds",
+        )
 
         return html.Div(
             [
@@ -454,29 +756,23 @@ def build_tableau_section(base_dir: str) -> html.Div:
                 ),
                 html.P(
                     "Primary analytics from your tableau_correlation_matrix.csv export — "
-                    "always available without Tableau Public. Gallery iframes below are optional.",
+                    "always available offline. Tableau Public gallery embeds below use maintained workbooks.",
                     style={"color": muted, "fontSize": "13px", "marginBottom": "12px"},
                 ),
                 html.Div(plotly_block),
                 html.Details(
                     [
                         html.Summary(
-                            "Tableau Public gallery embeds (optional)",
+                            "Tableau Public gallery embeds",
                             style={"color": accent, "cursor": "pointer", "fontWeight": "600", "marginBottom": "10px"},
                         ),
-                        html.Div(gallery_iframes),
-                        html.A(
-                            "Open ClimateChange-BigQuestions on Tableau Public ↗",
-                            href=embed_climate.split("?")[0],
-                            target="_blank",
-                            rel="noopener noreferrer",
-                            style={"color": accent, "fontSize": "12px"},
-                        ),
+                        gallery_body,
                     ],
-                    open=False,
+                    open=True,
+                    className="tableau-gallery-details",
                 ),
             ],
-            style={**card, "gridColumn": "1 / -1"},
+            style={**card, "gridColumn": "1 / -1", "width": "100%", "maxWidth": "100%", "boxSizing": "border-box"},
         )
 
     caps = html.Div(
@@ -533,11 +829,13 @@ def build_tableau_section(base_dir: str) -> html.Div:
             html.Div(
                 [
                     embed_card(
-                        "CO₂ — Tableau Public",
-                        "National and per-capita emissions — template for maps, BANs, and bar races.",
+                        TABLEAU_EMBEDS["co2"]["title"],
+                        TABLEAU_EMBEDS["co2"]["subtitle"],
                         embed_co2,
                         "Gallery viz; requires network. If blocked, use Open in Tableau Public.",
                         "#74b9ff",
+                        workbook=TABLEAU_EMBEDS["co2"]["workbook"],
+                        view=TABLEAU_EMBEDS["co2"]["view"],
                     ),
                 ],
                 style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(480px, 1fr))", "gap": "16px"},
@@ -545,11 +843,13 @@ def build_tableau_section(base_dir: str) -> html.Div:
             html.Div(
                 [
                     embed_card(
-                        "Superstore — UX reference",
-                        "Shows quick filters, cross-highlighting, and polished dashboard chrome.",
+                        TABLEAU_EMBEDS["superstore"]["title"],
+                        TABLEAU_EMBEDS["superstore"]["subtitle"],
                         embed_super,
                         "Apply the same interaction design to tableau_global_temperatures and correlation data.",
                         "#a29bfe",
+                        workbook=TABLEAU_EMBEDS["superstore"]["workbook"],
+                        view=TABLEAU_EMBEDS["superstore"]["view"],
                     ),
                     html.Div(
                         [
@@ -727,38 +1027,7 @@ def build_tableau_section(base_dir: str) -> html.Div:
         ]
     )
 
-    tabs = dcc.Tabs(
-        id="tableau-subtabs",
-        value="tab-embed",
-        persistence=True,
-        persistence_type="session",
-        children=[
-            dcc.Tab(
-                label="Embedded analytics",
-                value="tab-embed",
-                children=html.Div(tab_embed, style={"paddingTop": "16px"}),
-                style={"padding": "10px 16px", "fontWeight": "600"},
-                selected_style={"padding": "10px 16px", "fontWeight": "700", "borderTop": f"3px solid {orange}"},
-            ),
-            dcc.Tab(
-                label="Features & catalog",
-                value="tab-feat",
-                children=html.Div(tab_features, style={"paddingTop": "16px"}),
-                style={"padding": "10px 16px", "fontWeight": "600"},
-                selected_style={"padding": "10px 16px", "fontWeight": "700", "borderTop": f"3px solid {orange}"},
-            ),
-            dcc.Tab(
-                label="Workbook workflow",
-                value="tab-flow",
-                children=html.Div(tab_workflow, style={"paddingTop": "16px"}),
-                style={"padding": "10px 16px", "fontWeight": "600"},
-                selected_style={"padding": "10px 16px", "fontWeight": "700", "borderTop": f"3px solid {orange}"},
-            ),
-        ],
-        colors={"border": "#2c3e50", "primary": orange, "background": "#1b2838"},
-        style={"marginTop": "8px"},
-        content_style={"backgroundColor": "#0f1419", "padding": "4px 0 20px", "borderRadius": "0 0 8px 8px"},
-    )
+    tabs = _build_tableau_subtabs(tab_embed, tab_features, tab_workflow, orange, muted)
 
     return html.Div(
         [

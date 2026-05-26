@@ -25,7 +25,7 @@ from dash import Dash, dcc, html, Input, Output, State
 import dash
 import sys
 
-from tableau_section import build_tableau_section
+from tableau_section import TABLEAU_EMBED_SCRIPT, build_tableau_section
 
 # Ensure stdout can handle utf-8 on Windows
 if hasattr(sys.stdout, 'reconfigure'):
@@ -630,6 +630,151 @@ external_stylesheets = [
 app = Dash(__name__, external_stylesheets=external_stylesheets,
            suppress_callback_exceptions=True)
 app.title = "Earth's Climate Analytics"
+
+# Tableau Embedding API v3 + responsive embed styles (gallery iframes in tableau_section.py)
+app.index_string = f"""<!DOCTYPE html>
+<html>
+    <head>
+        {{%metas%}}
+        <title>{{%title%}}</title>
+        {{%favicon%}}
+        {{%css%}}
+        <script type="module" src="{TABLEAU_EMBED_SCRIPT}"></script>
+        <style>
+            /* Main Tableau cards (CO₂, Superstore) — not gallery section */
+            .tableau-embed-wrap:not(.tableau-gallery-embed-frame) iframe {{
+                background: #0d1117;
+            }}
+            @media (max-width: 768px) {{
+                .tableau-embed-wrap:not(.tableau-gallery-embed-frame) {{
+                    min-height: 360px !important;
+                    height: 55vh !important;
+                }}
+            }}
+
+            /* Climate Q&A — Tableau Public gallery embeds only */
+            .tableau-gallery-details {{
+                width: 100%;
+                max-width: 100%;
+                display: block;
+            }}
+            .tableau-gallery-embeds {{
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 28px;
+                padding-top: 12px;
+            }}
+            .tableau-gallery-embed-item {{
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }}
+            .tableau-gallery-embed-frame {{
+                position: relative;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                aspect-ratio: 16 / 9;
+                height: auto;
+                min-height: 280px;
+                max-height: min(52vw, 680px);
+                background: #0d1117;
+                border: 1px solid #2c3e50;
+                border-radius: 6px;
+                overflow: hidden;
+            }}
+            .tableau-gallery-embed-frame iframe {{
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                border: none;
+                background: #0d1117;
+            }}
+            @media (max-width: 1024px) {{
+                .tableau-gallery-embed-frame {{
+                    max-height: min(58vw, 560px);
+                }}
+            }}
+            @media (max-width: 640px) {{
+                .tableau-gallery-embed-frame {{
+                    min-height: 220px;
+                    max-height: 72vw;
+                    aspect-ratio: 4 / 3;
+                }}
+            }}
+
+            /* Tableau section — enterprise tab navigation */
+            .tableau-nav-shell {{ width: 100%; }}
+            .tableau-subtabs-parent .tab-container,
+            .tableau-subtabs-root > div:first-child {{
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: flex-end !important;
+                gap: 6px !important;
+            }}
+            .tableau-subtabs-root .tab,
+            .tableau-subtabs-root .tableau-subtab {{
+                color: #e8eef4 !important;
+                background-color: #2d4258 !important;
+                border: 1px solid #5a7a9a !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }}
+            .tableau-subtabs-root .tab--selected,
+            .tableau-subtabs-root .tableau-subtab--selected {{
+                color: #ffffff !important;
+                background-color: #0f1419 !important;
+                border-top: 3px solid #E97627 !important;
+                border-left-color: #E97627 !important;
+                border-right-color: #E97627 !important;
+                border-bottom-color: #0f1419 !important;
+                font-weight: 700 !important;
+                box-shadow: 0 -4px 18px rgba(233, 118, 39, 0.28) !important;
+            }}
+            .tableau-subtabs-root .tab:hover:not(.tab--selected),
+            .tableau-subtabs-root .tableau-subtab:hover:not(.tableau-subtab--selected) {{
+                background-color: #3a5572 !important;
+                color: #ffffff !important;
+                border-color: #E97627 !important;
+                transform: translateY(-2px);
+            }}
+            .tableau-subtabs-root .tab:focus-visible,
+            .tableau-subtabs-root .tableau-subtab:focus-visible {{
+                outline: 2px solid #E97627 !important;
+                outline-offset: 2px !important;
+            }}
+            .tableau-subtabs-content {{
+                border-top: 2px solid #E97627 !important;
+            }}
+            @media (max-width: 640px) {{
+                .tableau-subtabs-root .tab,
+                .tableau-subtabs-root .tableau-subtab {{
+                    flex: 1 1 100% !important;
+                    text-align: center !important;
+                    margin-right: 0 !important;
+                    white-space: normal !important;
+                    padding: 12px 14px !important;
+                }}
+                .tableau-tab-nav-header span {{
+                    font-size: 12px !important;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        {{%app_entry%}}
+        <footer>
+            {{%config%}}
+            {{%scripts%}}
+            {{%renderer%}}
+        </footer>
+    </body>
+</html>"""
 
 DROPDOWN_STYLE = {
     "width": "450px", "marginTop": "20px", "marginBottom": "20px",
