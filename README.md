@@ -1020,7 +1020,6 @@ Some third-party gallery workbooks on Tableau Public still reference deprecated 
 
 [![GitHub](https://img.shields.io/badge/GitHub-AyushRaj-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rajayush6200)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Ayush%20Raj-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/rajayush6200)
-[![Portfolio](https://img.shields.io/badge/Portfolio-Visit%20Site-22C55E?style=for-the-badge&logo=google-chrome&logoColor=white)](https://ayushraj.dev)
 
 </td>
 </tr>
