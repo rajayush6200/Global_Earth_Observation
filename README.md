@@ -711,9 +711,6 @@ Dataset/
 
 ### Screenshot Placeholders
 
-> **📸 To populate with actual screenshots:**
-> Run the dashboard `python app.py`, capture screenshots, and save them to `docs/screenshots/`
-
 <table>
 <tr>
 <td align="center" width="50%">
