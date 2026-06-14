@@ -1010,22 +1010,21 @@ Some third-party gallery workbooks on Tableau Public still reference deprecated 
 
 <div align="center">
 
-<table>
-<tr>
-<td align="center">
-
 ### Ayush Raj
 
-*Data Analytics Engineer · Climate Intelligence Developer*
+**Full-Stack Developer · MERN Stack Engineer · CS Student**
 
-[![GitHub](https://img.shields.io/badge/GitHub-AyushRaj-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rajayush6200)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Ayush%20Raj-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/rajayush6200)
+*Building scalable software solutions that solve real-world problems.*
 
-</td>
-</tr>
-</table>
+<br/>
 
-> *"Building production-grade analytics systems that turn planetary-scale data into actionable climate intelligence."*
+| Platform | Link |
+|----------|------|
+| 🌐 **Portfolio** | [ayushraj-dev.netlify.app](https://ayushraj-dev.netlify.app/) |
+| 💼 **LinkedIn** | [linkedin.com/in/rajayush6200](https://www.linkedin.com/in/rajayush6200/) |
+| 🐙 **GitHub** | [github.com/rajayush6200](https://github.com/rajayush6200) |
+| 🐦 **Twitter / X** | [@AyushRaj444](https://x.com/@AyushRaj444) |
+| 📧 **Email** | [rajayush6200@gmail.com](mailto:rajayush6200@gmail.com) |
 
 </div>
 
@@ -1057,15 +1056,19 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 <div align="center">
 
-**⭐ If this project impressed you, please give it a star — it helps others discover it!**
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=footer&animation=fadeIn" width="100%"/>
 
----
+**Built with precision, passion, and performance in mind.**
 
-*Built with ❤️ and Python · Powered by 275 years of Earth's climate record*
+*If this helped you or impressed you — a ⭐ star means the world.*
 
 [![Made with Python](https://img.shields.io/badge/Made%20with-Python-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Powered by Plotly](https://img.shields.io/badge/Powered%20by-Plotly%20Dash-008DE4?style=flat-square&logo=plotly&logoColor=white)](https://dash.plotly.com)
 [![Data from Berkeley Earth](https://img.shields.io/badge/Data-Berkeley%20Earth%20%7C%20NOAA%20%7C%20EPA-0EA5E9?style=flat-square)]()
 [![IPCC AR6 Aligned](https://img.shields.io/badge/Science-IPCC%20AR6%20Aligned-22C55E?style=flat-square)]()
+
+<br/>
+
+*© 2026 Ayush Raj · MIT License · Made with ❤️ and ☕*
 
 </div>
